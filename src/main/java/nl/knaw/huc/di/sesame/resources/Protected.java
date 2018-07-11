@@ -1,7 +1,7 @@
-package nl.knaw.huc.di.resources;
+package nl.knaw.huc.di.sesame.resources;
 
 import io.dropwizard.auth.Auth;
-import nl.knaw.huc.di.auth.User;
+import nl.knaw.huc.di.sesame.auth.User;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;

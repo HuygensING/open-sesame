@@ -1,4 +1,4 @@
-package nl.knaw.huc.di.auth;
+package nl.knaw.huc.di.sesame.auth;
 
 import io.dropwizard.auth.Authorizer;
 import org.slf4j.Logger;

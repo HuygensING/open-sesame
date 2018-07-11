@@ -1,4 +1,4 @@
-package nl.knaw.huc.di.auth;
+package nl.knaw.huc.di.sesame.auth;
 
 import com.google.common.base.MoreObjects;
 
