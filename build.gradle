@@ -1,16 +1,84 @@
-plugins {
-    id 'java'
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
+    }
 }
+group = 'nl.knaw.huc.di'
+version = '1.0-SNAPSHOT'
 
-group 'nl.knaw.huc.di'
-version '1.0-SNAPSHOT'
+apply plugin: 'application'
 
-sourceCompatibility = 1.8
+mainClassName = 'nl.knaw.huc.di.sesame.SesameApplication'
+apply plugin: 'com.github.johnrengelman.shadow'
 
 repositories {
-    mavenCentral()
+    jcenter()
+}
+
+def getBuiltBy = { ->
+    def user = System.getProperty("user.name")
+    def host = InetAddress.localHost.hostName
+    def os = System.getProperty("os.name") + ' ' + System.getProperty("os.version")
+    return user + '@' + host + ' on ' + os
+}
+
+ext {
+    dropwizardVersion = '1.3.5'
+    junitVersion = '5.1+'
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+compileJava {
+    options.encoding = "UTF-8"
+    options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
 }
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+    implementation group: 'io.dropwizard', name: 'dropwizard-auth', version: dropwizardVersion
+    implementation group: 'io.dropwizard', name: 'dropwizard-core', version: dropwizardVersion
+    implementation group: 'io.dropwizard', name: 'dropwizard-testing', version: dropwizardVersion
+
+    testImplementation group: "org.junit.jupiter", name: "junit-jupiter-api", version: junitVersion
+    testRuntime group: "org.junit.jupiter", name: "junit-jupiter-engine", version: junitVersion
+}
+
+shadowJar {
+    mergeServiceFiles()
+    exclude 'META-INF/*.DSA', 'META-INF/*.RSA', 'META-INF/*.SF'
+    manifest {
+        attributes 'Implementation-Title': rootProject.name
+        attributes 'Implementation-Version': rootProject.version
+        attributes 'Implementation-Vendor-Id': rootProject.group
+        attributes 'Build-Time': ZonedDateTime.now(ZoneId.of("UTC")).format(DateTimeFormatter.ISO_ZONED_DATE_TIME)
+        attributes 'Built-By': getBuiltBy()
+        attributes 'Created-By': 'Gradle ' + gradle.gradleVersion
+        attributes 'Main-Class': mainClassName
+    }
+    archiveName 'open-sesame-full.jar'
+}
+
+test {
+    useJUnitPlatform()
+    failFast = true
+    testLogging {
+        events 'PASSED', 'FAILED', 'SKIPPED'
+    }
+    afterSuite { desc, result ->
+        if (!desc.parent) {
+            println "\nTest result: ${result.resultType}"
+            println "Test summary: ${result.testCount} tests, " +
+                    "${result.successfulTestCount} succeeded, " +
+                    "${result.failedTestCount} failed, " +
+                    "${result.skippedTestCount} skipped"
+        }
+    }
 }
