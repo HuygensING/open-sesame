@@ -13,9 +13,9 @@ import java.util.Optional;
 public class Protected {
 
   @GET
-  @RolesAllowed({"Wookie", "ADMIN"})
+  @RolesAllowed("ADMIN")
   public String getGreeting(@Auth Optional<User> userOpt) {
     final String name = userOpt.map(User::getName).orElse("anonymous user");
-    return "Hello, " + name;
+    return String.format("Hello, %s\n", name);
   }
 }
