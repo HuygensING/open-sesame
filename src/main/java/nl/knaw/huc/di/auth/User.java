@@ -1,5 +1,7 @@
 package nl.knaw.huc.di.auth;
 
+import com.google.common.base.MoreObjects;
+
 import java.security.Principal;
 
 public class User implements Principal {
@@ -12,5 +14,12 @@ public class User implements Principal {
   @Override
   public String getName() {
     return name;
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+                      .add("name", name)
+                      .toString();
   }
 }
