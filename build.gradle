@@ -20,6 +20,9 @@ apply plugin: 'com.github.johnrengelman.shadow'
 
 repositories {
     jcenter()
+    maven {
+        url "http://maven.huygens.knaw.nl/repository"
+    }
 }
 
 def getBuiltBy = { ->
@@ -46,6 +49,15 @@ dependencies {
     implementation group: 'io.dropwizard', name: 'dropwizard-auth', version: dropwizardVersion
     implementation group: 'io.dropwizard', name: 'dropwizard-core', version: dropwizardVersion
     implementation group: 'io.dropwizard', name: 'dropwizard-testing', version: dropwizardVersion
+
+// despite excluding all logging dependencies, this 'implementation dependency' makes
+// the app hang with a java.lang.IllegalStateException: Unable to acquire the logger context
+//    implementation('nl.knaw.huygens:security-client:2.3.5') {
+//        exclude group: 'org.slf4j', module: 'slf4j-api'
+//        exclude group: 'org.slf4j', module: 'log4j12'
+//        exclude group: 'org.slf4j', module: 'jul-to-slf4j'
+//        exclude group: 'log4j', module: 'log4j'
+//    }
 
     testImplementation group: "org.junit.jupiter", name: "junit-jupiter-api", version: junitVersion
     testRuntime group: "org.junit.jupiter", name: "junit-jupiter-engine", version: junitVersion
