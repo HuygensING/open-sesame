@@ -1,3 +1,6 @@
+# Configuration
+config-local.yaml
+
 # Gradle
 .gradle
 /build

@@ -6,11 +6,13 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.core.HttpHeaders;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.util.UUID;
 
-public class HuygensCredentialAuthFilter<P extends Principal> extends AuthFilter<User, P> {
+public class HuygensCredentialAuthFilter<P extends Principal> extends AuthFilter<UUID, P> {
   private static final Logger LOG = LoggerFactory.getLogger(HuygensCredentialAuthFilter.class);
 
   private HuygensCredentialAuthFilter() {
@@ -18,15 +20,47 @@ public class HuygensCredentialAuthFilter<P extends Principal> extends AuthFilter
 
   @Override
   public void filter(ContainerRequestContext requestContext) throws IOException {
-    User user = new User("Alibabba");
-    LOG.debug("");
-    if (!authenticate(requestContext, user, "HUYGENS")) {
+    final String authHeader = requestContext.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+
+    final UUID sessionId = getSessionId(authHeader);
+    if (!authenticate(requestContext, sessionId, "HUYGENS")) {
       throw new WebApplicationException(unauthorizedHandler.buildResponse(prefix, realm));
     }
   }
 
+  private UUID getSessionId(String header) {
+    LOG.trace("header: [{}]", header);
+
+    if (header == null) {
+      LOG.debug("Missing auth header ");
+      return null;
+    }
+
+    final int space = header.indexOf(' ');
+    if (space <= 0) {
+      LOG.debug("Short auth header") ;
+      return null;
+    }
+
+    final String method = header.substring(0, space);
+    if (!prefix.equalsIgnoreCase(method)) {
+      LOG.debug("prefix {} != method {}", prefix, method);
+      return null;
+    }
+
+    final String sessionId = header.substring(space + 1);
+    LOG.trace("sessionId: [{}]", sessionId);
+
+    try {
+      return UUID.fromString(sessionId);
+    } catch (IllegalArgumentException e) {
+      LOG.debug("Session token not a valid uuid: {}", sessionId);
+      return null;
+    }
+  }
+
   public static class Builder<P extends Principal> extends
-    AuthFilterBuilder<User, P, HuygensCredentialAuthFilter<P>> {
+    AuthFilterBuilder<UUID, P, HuygensCredentialAuthFilter<P>> {
 
     @Override
     protected HuygensCredentialAuthFilter<P> newInstance() {

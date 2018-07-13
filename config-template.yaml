@@ -1,1 +1,17 @@
 authenticationCachePolicy: maximumSize=10000, expireAfterAccess=10m
+
+federatedAuthentication:
+  credentials: DUMMY
+  url: DUMMY
+
+jerseyClient:
+  timeout: 10s
+
+logging:
+  level: INFO
+  appenders:
+    - type: console
+
+  loggers:
+    nl.knaw.huc.di.sesame: DEBUG
+    nl.knaw.huc.di.sesame.resources: TRACE

@@ -47,6 +47,7 @@ compileJava {
 
 dependencies {
     implementation group: 'io.dropwizard', name: 'dropwizard-auth', version: dropwizardVersion
+    implementation group: 'io.dropwizard', name: 'dropwizard-client', version: dropwizardVersion
     implementation group: 'io.dropwizard', name: 'dropwizard-core', version: dropwizardVersion
     implementation group: 'io.dropwizard', name: 'dropwizard-testing', version: dropwizardVersion
 
