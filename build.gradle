@@ -51,6 +51,8 @@ dependencies {
     implementation group: 'io.dropwizard', name: 'dropwizard-core', version: dropwizardVersion
     implementation group: 'io.dropwizard', name: 'dropwizard-testing', version: dropwizardVersion
 
+    implementation group: 'com.google.apis', name: 'google-api-services-oauth2', version: 'v2-rev139-1.23.0'
+
     testImplementation group: "org.junit.jupiter", name: "junit-jupiter-api", version: junitVersion
     testRuntime group: "org.junit.jupiter", name: "junit-jupiter-engine", version: junitVersion
 }

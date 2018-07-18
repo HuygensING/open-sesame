@@ -18,19 +18,28 @@ public class SesameConfiguration extends Configuration {
 
   @Valid
   @NotNull
+  @JsonProperty("google")
+  private GoogleConfig googleConfig;
+
+  @Valid
+  @NotNull
   @JsonProperty("jerseyClient")
   private JerseyClientConfiguration jerseyClient = new JerseyClientConfiguration();
-
-  public JerseyClientConfiguration getJerseyClientConfiguration() {
-    return jerseyClient;
-  }
 
   public CacheBuilderSpec getAuthenticationCachePolicy() {
     return authenticationCachePolicy;
   }
 
+  public GoogleConfig getGoogleConfig() {
+    return googleConfig;
+  }
+
   public FederatedAuthConfig getFederatedAuthConfig() {
     return federatedAuthConfig;
+  }
+
+  public JerseyClientConfiguration getJerseyClientConfiguration() {
+    return jerseyClient;
   }
 
   public static class FederatedAuthConfig {
@@ -50,6 +59,25 @@ public class SesameConfiguration extends Configuration {
     @JsonProperty
     public String getCredentials() {
       return credentials;
+    }
+  }
+
+  public static class GoogleConfig {
+    @Valid
+    @NotNull
+    String secret;
+    @Valid
+    @NotNull
+    private String id;
+
+    @JsonProperty
+    public String getId() {
+      return id;
+    }
+
+    @JsonProperty
+    public String getSecret() {
+      return secret;
     }
   }
 }
