@@ -54,7 +54,7 @@ public class HuygensCredentialAuthFilter<P extends Principal> extends AuthFilter
     try {
       return UUID.fromString(sessionId);
     } catch (IllegalArgumentException e) {
-      LOG.debug("Session token not a valid uuid: {}", sessionId);
+      LOG.warn("Session token not a valid uuid: {}", sessionId);
       return null;
     }
   }
