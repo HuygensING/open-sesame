@@ -31,15 +31,16 @@ public class HuygensAuthenticator implements Authenticator<UUID, User> {
   @Override
   public Optional<User> authenticate(UUID sessionID) {
     LOG.debug("Authenticating session: {}", sessionID);
-    LOG.trace("targeting URL: {}", securityServerURL);
 
+
+    LOG.trace("targeting security server: {}", securityServerURL);
     final HuygensDetails huygensDetails = client.target(securityServerURL).path("sessions").path(sessionID.toString())
                                                 .request()
                                                 .accept(MediaType.APPLICATION_JSON_TYPE)
                                                 .header(HttpHeaders.AUTHORIZATION, credentials)
                                                 .get(HuygensDetails.class);
+    LOG.trace("huygensDetails: {}", huygensDetails);
 
-    LOG.debug("session: {}", huygensDetails);
     if (huygensDetails == null) {
       return Optional.empty();
     }

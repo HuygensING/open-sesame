@@ -13,9 +13,16 @@ import java.util.Optional;
 public class Protected {
 
   @GET
-  @RolesAllowed("ADMIN")
   public String getGreeting(@Auth Optional<User> userOpt) {
     final String name = userOpt.map(User::getName).orElse("anonymous user");
     return String.format("Hello, %s\n", name);
+  }
+
+  @GET
+  @RolesAllowed("ADMIN")
+  @Path("email")
+  public String postGreeting(@Auth Optional<User> userOpt) {
+    final String email = userOpt.flatMap(User::getEmail).orElse("e-mail address unknown");
+    return String.format("Email: %s\n", email);
   }
 }

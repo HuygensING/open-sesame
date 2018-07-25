@@ -1,4 +1,4 @@
-package nl.knaw.huc.di.sesame.auth.huygens;
+package nl.knaw.huc.di.sesame.auth.google;
 
 import io.dropwizard.auth.AuthFilter;
 import org.slf4j.Logger;
@@ -8,22 +8,21 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.HttpHeaders;
 
-import java.io.IOException;
 import java.security.Principal;
 import java.util.UUID;
 
-public class HuygensCredentialAuthFilter<P extends Principal> extends AuthFilter<UUID, P> {
-  private static final Logger LOG = LoggerFactory.getLogger(HuygensCredentialAuthFilter.class);
+public class GoogleAuthFilter<P extends Principal> extends AuthFilter<UUID, P> {
+  private static final Logger LOG = LoggerFactory.getLogger(GoogleAuthFilter.class);
 
-  private HuygensCredentialAuthFilter() {
+  private GoogleAuthFilter() {
   }
 
   @Override
-  public void filter(ContainerRequestContext requestContext) throws IOException {
+  public void filter(ContainerRequestContext requestContext) {
     final String authHeader = requestContext.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
     final UUID sessionId = getSessionId(authHeader);
-    if (!authenticate(requestContext, sessionId, "HUYGENS")) {
+    if (!authenticate(requestContext, sessionId, "Google")) {
       throw new WebApplicationException(unauthorizedHandler.buildResponse(prefix, realm));
     }
   }
@@ -45,8 +44,10 @@ public class HuygensCredentialAuthFilter<P extends Principal> extends AuthFilter
     final String method = header.substring(0, space);
     if (!prefix.equalsIgnoreCase(method)) {
       LOG.debug("prefix {} != method {}", prefix, method);
-      return null;
+      return null; // not for us, maybe some other AuthFilter can pick it up
     }
+
+    // Header prefix checked, from here on we're authoritative
 
     final String sessionId = header.substring(space + 1);
     LOG.trace("sessionId: [{}]", sessionId);
@@ -59,10 +60,10 @@ public class HuygensCredentialAuthFilter<P extends Principal> extends AuthFilter
     }
   }
 
-  public static class Builder<P extends Principal> extends AuthFilterBuilder<UUID, P, HuygensCredentialAuthFilter<P>> {
+  public static class Builder<P extends Principal> extends AuthFilterBuilder<UUID, P, GoogleAuthFilter<P>> {
     @Override
-    protected HuygensCredentialAuthFilter<P> newInstance() {
-      return new HuygensCredentialAuthFilter<>();
+    protected GoogleAuthFilter<P> newInstance() {
+      return new GoogleAuthFilter<>();
     }
   }
 }

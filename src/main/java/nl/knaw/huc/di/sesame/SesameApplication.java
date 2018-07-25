@@ -17,16 +17,17 @@ import io.dropwizard.client.JerseyClientConfiguration;
 import io.dropwizard.jersey.setup.JerseyEnvironment;
 import io.dropwizard.setup.Environment;
 import nl.knaw.huc.di.sesame.SesameConfiguration.GoogleConfig;
+import nl.knaw.huc.di.sesame.auth.SessionManager;
+import nl.knaw.huc.di.sesame.auth.User;
 import nl.knaw.huc.di.sesame.auth.basic.BasicAuthenticator;
 import nl.knaw.huc.di.sesame.auth.basic.BasicAuthorizer;
-import nl.knaw.huc.di.sesame.auth.huygens.HuygensAuthenticator;
-import nl.knaw.huc.di.sesame.auth.huygens.HuygensCredentialAuthFilter;
-import nl.knaw.huc.di.sesame.auth.User;
+import nl.knaw.huc.di.sesame.auth.google.GoogleAuthFilter;
+import nl.knaw.huc.di.sesame.auth.google.GoogleAuthenticator;
 import nl.knaw.huc.di.sesame.auth.google.OAuth2Builder;
-import nl.knaw.huc.di.sesame.auth.SessionManager;
+import nl.knaw.huc.di.sesame.auth.huygens.HuygensAuthFilter;
+import nl.knaw.huc.di.sesame.auth.huygens.HuygensAuthenticator;
 import nl.knaw.huc.di.sesame.resources.GoogleLogin;
 import nl.knaw.huc.di.sesame.resources.Protected;
-import org.assertj.core.util.Lists;
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,26 +71,48 @@ public class SesameApplication extends Application<SesameConfiguration> {
   }
 
   private void registerAuth(SesameConfiguration configuration, Environment environment) {
-    final AuthFilter basicCredentialAuthFilter = new BasicCredentialAuthFilter.Builder<User>()
-      .setAuthenticator(new BasicAuthenticator())
-      .setAuthorizer(new BasicAuthorizer())
-      .setRealm("SECRET COW LEVEL")
-      .buildAuthFilter();
+    final JerseyEnvironment jersey = environment.jersey();
+    jersey.register(new AuthDynamicFeature(new ChainedAuthFilter<>(createAuthFilters(configuration, environment))));
+    jersey.register(RolesAllowedDynamicFeature.class);
 
+    // So we can use @Auth to inject a custom Principal type into our resources
+    jersey.register(new AuthValueFactoryProvider.Binder<>(User.class));
+  }
+
+  private ImmutableList<AuthFilter> createAuthFilters(SesameConfiguration configuration, Environment environment) {
+    return ImmutableList.of(
+      createBasicCredentialAuthFilter(),
+      createHuygensCredentialAuthFilter(configuration, environment),
+      createGoogleCredentialAuthFilter());
+  }
+
+  private GoogleAuthFilter<User> createGoogleCredentialAuthFilter() {
+    return new GoogleAuthFilter.Builder<User>()
+      .setPrefix("Google")
+      .setRealm("Google OAuth Login")
+      .setAuthenticator(new GoogleAuthenticator(sessionManager))
+      .setAuthorizer(new BasicAuthorizer())
+      .buildAuthFilter();
+  }
+
+  private HuygensAuthFilter<User> createHuygensCredentialAuthFilter(SesameConfiguration configuration,
+                                                                    Environment environment) {
     final Client client = createClient(environment, configuration.getJerseyClientConfiguration());
-    final AuthFilter huygensCredentialAuthFilter = new HuygensCredentialAuthFilter.Builder<User>()
+
+    return new HuygensAuthFilter.Builder<User>()
       .setPrefix("Huygens")
       .setRealm("Federated Login")
       .setAuthenticator(new HuygensAuthenticator(client, configuration.getFederatedAuthConfig()))
       .setAuthorizer(new BasicAuthorizer())
       .buildAuthFilter();
+  }
 
-    final JerseyEnvironment jersey = environment.jersey();
-    final List<AuthFilter> filters = Lists.newArrayList(basicCredentialAuthFilter, huygensCredentialAuthFilter);
-    jersey.register(new AuthDynamicFeature(new ChainedAuthFilter<>(filters)));
-    jersey.register(RolesAllowedDynamicFeature.class);
-    // So we can use @Auth to inject a custom Principal type into our resources
-    jersey.register(new AuthValueFactoryProvider.Binder<>(User.class));
+  private BasicCredentialAuthFilter<User> createBasicCredentialAuthFilter() {
+    return new BasicCredentialAuthFilter.Builder<User>()
+      .setAuthenticator(new BasicAuthenticator())
+      .setAuthorizer(new BasicAuthorizer())
+      .setRealm("SECRET COW LEVEL")
+      .buildAuthFilter();
   }
 
   private void registerResources(SesameConfiguration configuration, JerseyEnvironment jersey) {

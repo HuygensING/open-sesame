@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.GET;
-import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -82,15 +81,19 @@ public class GoogleLogin {
     LOG.trace("googleCallback, state=[{}], code=[{}]", state, code);
 
     if (code == null) {
-      throw new NotAuthorizedException("Missing OAuth2 code param", WWW_AUTH_BEARER_AND_REALM);
+      return unauthorized("Missing required 'code' parameter");
+    }
+
+    if (state == null) {
+      return unauthorized("Missing required 'state' parameter");
     }
 
     final UUID sessionId;
     try {
       sessionId = UUID.fromString(state);
     } catch (IllegalArgumentException e) {
-      LOG.warn("Illegal UUID in state: {}", state);
-      throw new NotAuthorizedException("Malformed sessionId", WWW_AUTH_BEARER_AND_REALM);
+      LOG.warn("Invalid UUID in state: {}", state);
+      return unauthorized(String.format("Parameter 'state' is not a valid UUID: %s", state));
     }
 
     final Optional<Userinfo> optionalUserInfo = authorize(code).map(oAuth2Builder::build).map(Oauth2::userinfo);
@@ -99,24 +102,16 @@ public class GoogleLogin {
       LOG.trace("userInfo: {}", userInfo);
 
       final Userinfoplus userinfoplus = userInfo.get().execute();
-      final User user = User.Builder.fromName(userinfoplus.getName())
-                                    .identifiedBy(userinfoplus.getId())
-                                    .withEmail(userinfoplus.getEmail())
-                                    .build();
+      LOG.trace("Google says: userinfoplus={}", userinfoplus.toPrettyString());
 
+      final User user = createUser(userinfoplus);
       sessionManager.register(sessionId, user);
 
-      final String msg = String.format("{\"sessionId\": \"%s\",%s\"userInfo\": %s}", sessionId,
-        System.lineSeparator(), userinfoplus.toPrettyString());
-      LOG.trace("msg: {}", msg);
-
-      return Response.ok(msg).build();
+      final String message = String.format("{\"sessionId\": \"%s\"}", sessionId);
+      return ok(message);
     }
 
-    return Response.status(Response.Status.UNAUTHORIZED)
-                   .entity("Unable to verify auth token " + code)
-                   .header(WWW_AUTHENTICATE, WWW_AUTH_BEARER_AND_REALM)
-                   .build();
+    return unauthorized("Unable to verify auth token: " + code);
   }
 
   private Optional<Credential> authorize(String code) throws IOException {
@@ -144,5 +139,24 @@ public class GoogleLogin {
 
     // store credential and return it
     return Optional.of(flow.createAndStoreCredential(response, usePersistentCredentialStore ? userId : null));
+  }
+
+  private User createUser(Userinfoplus userinfoplus) {
+    return User.Builder.fromName(userinfoplus.getName())
+                       .identifiedBy(userinfoplus.getId())
+                       .withEmail(userinfoplus.getEmail())
+                       .build();
+  }
+
+  private Response ok(String message) {
+    return Response.ok(String.format("{\"ok\":%s}", message))
+                   .build();
+  }
+
+  private Response unauthorized(String message) {
+    return Response.status(Response.Status.UNAUTHORIZED)
+                   .entity(String.format("{\"error\":\"%s\"}", message))
+                   .header(WWW_AUTHENTICATE, WWW_AUTH_BEARER_AND_REALM)
+                   .build();
   }
 }
