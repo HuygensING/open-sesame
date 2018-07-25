@@ -1,4 +1,4 @@
-package nl.knaw.huc.di.sesame.auth;
+package nl.knaw.huc.di.sesame.auth.huygens;
 
 import io.dropwizard.auth.AuthFilter;
 import org.slf4j.Logger;
@@ -38,7 +38,7 @@ public class HuygensCredentialAuthFilter<P extends Principal> extends AuthFilter
 
     final int space = header.indexOf(' ');
     if (space <= 0) {
-      LOG.debug("Short auth header") ;
+      LOG.debug("Short auth header");
       return null;
     }
 
@@ -59,9 +59,7 @@ public class HuygensCredentialAuthFilter<P extends Principal> extends AuthFilter
     }
   }
 
-  public static class Builder<P extends Principal> extends
-    AuthFilterBuilder<UUID, P, HuygensCredentialAuthFilter<P>> {
-
+  public static class Builder<P extends Principal> extends AuthFilterBuilder<UUID, P, HuygensCredentialAuthFilter<P>> {
     @Override
     protected HuygensCredentialAuthFilter<P> newInstance() {
       return new HuygensCredentialAuthFilter<>();

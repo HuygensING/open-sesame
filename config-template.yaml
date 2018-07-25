@@ -1,8 +1,12 @@
 authenticationCachePolicy: maximumSize=10000, expireAfterAccess=10m
 
 federatedAuthentication:
-  credentials: DUMMY
-  url: DUMMY
+  credentials: Huygens security-server-key-here
+  url: security-server-url-here
+
+google:
+  clientId: your-client-id-here.apps.googleusercontent.com
+  clientSecret: your-client-secret-here
 
 jerseyClient:
   timeout: 10s

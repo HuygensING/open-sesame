@@ -1,10 +1,10 @@
 package nl.knaw.huc.di.sesame;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow.Builder;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.common.collect.ImmutableList;
 import io.dropwizard.Application;
 import io.dropwizard.auth.AuthDynamicFeature;
@@ -17,13 +17,14 @@ import io.dropwizard.client.JerseyClientConfiguration;
 import io.dropwizard.jersey.setup.JerseyEnvironment;
 import io.dropwizard.setup.Environment;
 import nl.knaw.huc.di.sesame.SesameConfiguration.GoogleConfig;
-import nl.knaw.huc.di.sesame.auth.ExampleAuthenticator;
-import nl.knaw.huc.di.sesame.auth.ExampleAuthorizer;
-import nl.knaw.huc.di.sesame.auth.HuygensAuthenticator;
-import nl.knaw.huc.di.sesame.auth.HuygensCredentialAuthFilter;
+import nl.knaw.huc.di.sesame.auth.basic.BasicAuthenticator;
+import nl.knaw.huc.di.sesame.auth.basic.BasicAuthorizer;
+import nl.knaw.huc.di.sesame.auth.huygens.HuygensAuthenticator;
+import nl.knaw.huc.di.sesame.auth.huygens.HuygensCredentialAuthFilter;
 import nl.knaw.huc.di.sesame.auth.User;
 import nl.knaw.huc.di.sesame.auth.google.OAuth2Builder;
-import nl.knaw.huc.di.sesame.resources.GoogleAuth;
+import nl.knaw.huc.di.sesame.auth.SessionManager;
+import nl.knaw.huc.di.sesame.resources.GoogleLogin;
 import nl.knaw.huc.di.sesame.resources.Protected;
 import org.assertj.core.util.Lists;
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
@@ -32,7 +33,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.client.Client;
 
-import java.io.File;
 import java.util.List;
 
 public class SesameApplication extends Application<SesameConfiguration> {
@@ -42,7 +42,7 @@ public class SesameApplication extends Application<SesameConfiguration> {
 
   private static final JacksonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
 
-  private static final File DATA_STORE_DIR = new File(System.getProperty("user.home"), ".store/open_sesame");
+  // private static final File DATA_STORE_DIR = new File("/path/to/persistent/storage/dir");
 
   private static final List<String> SCOPES = ImmutableList.of(
     "https://www.googleapis.com/auth/userinfo.profile",
@@ -50,6 +50,8 @@ public class SesameApplication extends Application<SesameConfiguration> {
   );
 
   private static HttpTransport httpTransport;
+
+  private final SessionManager sessionManager = new SessionManager();
 
   public static void main(String[] args) throws Exception {
     new SesameApplication().run(args);
@@ -69,17 +71,17 @@ public class SesameApplication extends Application<SesameConfiguration> {
 
   private void registerAuth(SesameConfiguration configuration, Environment environment) {
     final AuthFilter basicCredentialAuthFilter = new BasicCredentialAuthFilter.Builder<User>()
-      .setAuthenticator(new ExampleAuthenticator())
-      .setAuthorizer(new ExampleAuthorizer())
+      .setAuthenticator(new BasicAuthenticator())
+      .setAuthorizer(new BasicAuthorizer())
       .setRealm("SECRET COW LEVEL")
       .buildAuthFilter();
 
     final Client client = createClient(environment, configuration.getJerseyClientConfiguration());
     final AuthFilter huygensCredentialAuthFilter = new HuygensCredentialAuthFilter.Builder<User>()
       .setPrefix("Huygens")
-      .setRealm("Federated Authentication")
+      .setRealm("Federated Login")
       .setAuthenticator(new HuygensAuthenticator(client, configuration.getFederatedAuthConfig()))
-      .setAuthorizer(new ExampleAuthorizer())
+      .setAuthorizer(new BasicAuthorizer())
       .buildAuthFilter();
 
     final JerseyEnvironment jersey = environment.jersey();
@@ -90,18 +92,25 @@ public class SesameApplication extends Application<SesameConfiguration> {
     jersey.register(new AuthValueFactoryProvider.Binder<>(User.class));
   }
 
-  private void registerResources(SesameConfiguration configuration, JerseyEnvironment jersey) throws Exception {
-    jersey.register(new GoogleAuth(createFlow(configuration.getGoogleConfig()), createOAuth2Builder()));
+  private void registerResources(SesameConfiguration configuration, JerseyEnvironment jersey) {
+    jersey.register(createGoogleLoginResource(configuration.getGoogleConfig()));
     jersey.register(Protected.class);
   }
 
-  private GoogleAuthorizationCodeFlow createFlow(GoogleConfig googleConfig) throws Exception {
-    LOG.trace("DATA_STORE_DIR: {}", DATA_STORE_DIR);
+  private GoogleLogin createGoogleLoginResource(GoogleConfig googleConfig) {
+    return new GoogleLogin(createFlow(googleConfig), createOAuth2Builder(), sessionManager);
+  }
 
-    final GoogleAuthorizationCodeFlow.Builder builder = new GoogleAuthorizationCodeFlow.Builder(
-      httpTransport, JSON_FACTORY, googleConfig.getId(), googleConfig.getSecret(), SCOPES);
+  private GoogleAuthorizationCodeFlow createFlow(GoogleConfig googleConfig) {
+    final String clientId = googleConfig.getClientId();
+    final String clientSecret = googleConfig.getClientSecret();
+    final Builder codeFlowBuilder = new Builder(httpTransport, JSON_FACTORY, clientId, clientSecret, SCOPES);
 
-    return builder.setDataStoreFactory(new FileDataStoreFactory(DATA_STORE_DIR)).build();
+    // If a persistent data store is desired, this may serve as an example.
+    // LOG.trace("DATA_STORE_DIR: {}", DATA_STORE_DIR);
+    // return codeFlowBuilder.setDataStoreFactory(new FileDataStoreFactory(DATA_STORE_DIR)).build();
+
+    return codeFlowBuilder.build();
   }
 
   private OAuth2Builder createOAuth2Builder() {
@@ -111,4 +120,5 @@ public class SesameApplication extends Application<SesameConfiguration> {
   private Client createClient(Environment environment, JerseyClientConfiguration configuration) {
     return new JerseyClientBuilder(environment).using(configuration).build(getName());
   }
+
 }

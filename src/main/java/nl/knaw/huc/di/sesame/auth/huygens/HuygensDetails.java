@@ -1,4 +1,4 @@
-package nl.knaw.huc.di.sesame.auth;
+package nl.knaw.huc.di.sesame.auth.huygens;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -6,7 +6,8 @@ import com.google.common.base.MoreObjects;
 
 import java.util.UUID;
 
-public class Session {
+/** Holds fields coming from the Huygens Security server */
+public class HuygensDetails {
   @JsonProperty
   private UUID id;
 
@@ -34,6 +35,7 @@ public class Session {
     @JsonProperty
     private String displayName;
 
+    @JsonProperty
     private String emailAddress;
 
     @JsonProperty
@@ -47,6 +49,10 @@ public class Session {
       return emailAddress;
     }
 
+    public String getPersistentID() {
+      return persistentID;
+    }
+
     @Override
     public String toString() {
       return MoreObjects.toStringHelper(this)
@@ -54,10 +60,6 @@ public class Session {
                         .add("emailAddress", emailAddress)
                         .add("persistentID", persistentID)
                         .toString();
-    }
-
-    public String getPersistentID() {
-      return persistentID;
     }
   }
 }

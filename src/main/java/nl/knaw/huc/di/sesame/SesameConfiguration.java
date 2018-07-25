@@ -65,19 +65,20 @@ public class SesameConfiguration extends Configuration {
   public static class GoogleConfig {
     @Valid
     @NotNull
-    String secret;
+    String clientSecret;
+
     @Valid
     @NotNull
-    private String id;
+    private String clientId;
 
     @JsonProperty
-    public String getId() {
-      return id;
+    public String getClientId() {
+      return clientId;
     }
 
     @JsonProperty
-    public String getSecret() {
-      return secret;
+    public String getClientSecret() {
+      return clientSecret;
     }
   }
 }

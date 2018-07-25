@@ -1,7 +1,8 @@
-package nl.knaw.huc.di.sesame.auth;
+package nl.knaw.huc.di.sesame.auth.huygens;
 
 import io.dropwizard.auth.Authenticator;
 import nl.knaw.huc.di.sesame.SesameConfiguration;
+import nl.knaw.huc.di.sesame.auth.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,17 +33,26 @@ public class HuygensAuthenticator implements Authenticator<UUID, User> {
     LOG.debug("Authenticating session: {}", sessionID);
     LOG.trace("targeting URL: {}", securityServerURL);
 
-    final Session session = client.target(securityServerURL).path("sessions").path(sessionID.toString())
-                                  .request()
-                                  .accept(MediaType.APPLICATION_JSON_TYPE)
-                                  .header(HttpHeaders.AUTHORIZATION, credentials)
-                                  .get(Session.class);
+    final HuygensDetails huygensDetails = client.target(securityServerURL).path("sessions").path(sessionID.toString())
+                                                .request()
+                                                .accept(MediaType.APPLICATION_JSON_TYPE)
+                                                .header(HttpHeaders.AUTHORIZATION, credentials)
+                                                .get(HuygensDetails.class);
 
-    LOG.debug("session: {}", session);
-    if (session != null && session.getOwner() != null) {
-      return Optional.of(new User(session.getOwner().getDisplayName()));
+    LOG.debug("session: {}", huygensDetails);
+    if (huygensDetails == null) {
+      return Optional.empty();
     }
 
-    return Optional.empty();
+    final HuygensDetails.Owner owner = huygensDetails.getOwner();
+
+    if (owner == null) {
+      return Optional.empty();
+    }
+
+    return Optional.of(User.Builder.fromName(owner.getDisplayName())
+                                   .identifiedBy(owner.getPersistentID())
+                                   .withEmail(owner.getEmailAddress())
+                                   .build());
   }
 }
