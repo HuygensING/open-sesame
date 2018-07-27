@@ -13,10 +13,12 @@ import nl.knaw.huc.di.sesame.auth.google.OAuth2Builder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -48,6 +50,9 @@ public class GoogleLogin {
   public GoogleLogin(GoogleAuthorizationCodeFlow flow, OAuth2Builder oAuth2Builder, SessionManager sessionManager) {
     this(flow, oAuth2Builder, sessionManager, false);
   }
+
+  @Context
+  private HttpServletRequest servletRequest;
 
   public GoogleLogin(GoogleAuthorizationCodeFlow flow, OAuth2Builder oAuth2Builder,
                      SessionManager sessionManager,
@@ -145,6 +150,7 @@ public class GoogleLogin {
     return User.Builder.fromName(userinfoplus.getName())
                        .identifiedBy(userinfoplus.getId())
                        .withEmail(userinfoplus.getEmail())
+                       .withRemoteAddr(servletRequest.getRemoteAddr())
                        .build();
   }
 

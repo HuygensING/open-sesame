@@ -1,21 +1,17 @@
 package nl.knaw.huc.di.sesame.auth.huygens;
 
 import io.dropwizard.auth.AuthFilter;
-import nl.knaw.huc.di.sesame.auth.SessionCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.UriInfo;
 
-import java.net.URI;
 import java.security.Principal;
-import java.util.Optional;
 import java.util.UUID;
 
-public class HuygensAuthFilter<P extends Principal> extends AuthFilter<SessionCredentials, P> {
+public class HuygensAuthFilter<P extends Principal> extends AuthFilter<UUID, P> {
   private static final Logger LOG = LoggerFactory.getLogger(HuygensAuthFilter.class);
 
   private HuygensAuthFilter() {
@@ -30,13 +26,7 @@ public class HuygensAuthFilter<P extends Principal> extends AuthFilter<SessionCr
       deny();
     }
 
-    final String host = Optional.ofNullable(requestContext.getUriInfo())
-                                .map(UriInfo::getRequestUri)
-                                .map(URI::getHost)
-                                .orElse("unknown");
-
-    final SessionCredentials credentials = new SessionCredentials(uuid, host);
-    if (!authenticate(requestContext, credentials, "Huygens")) {
+    if (!authenticate(requestContext, uuid, "Huygens")) {
       deny();
     }
   }
@@ -79,7 +69,7 @@ public class HuygensAuthFilter<P extends Principal> extends AuthFilter<SessionCr
   }
 
   public static class Builder<P extends Principal>
-    extends AuthFilterBuilder<SessionCredentials, P, HuygensAuthFilter<P>> {
+    extends AuthFilterBuilder<UUID, P, HuygensAuthFilter<P>> {
     @Override
     protected HuygensAuthFilter<P> newInstance() {
       return new HuygensAuthFilter<>();

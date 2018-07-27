@@ -10,8 +10,8 @@ public class User implements Principal {
   private final String name;
 
   private Optional<String> email;
-  private Optional<String> host;
   private Optional<String> persistentId;
+  private Optional<String> remoteAddr;
 
   private User(String name) {
     this.name = name;
@@ -26,12 +26,12 @@ public class User implements Principal {
     return email;
   }
 
-  public Optional<String> getHost() {
-    return host;
-  }
-
   public Optional<String> getPersistentId() {
     return persistentId;
+  }
+
+  public Optional<String> getRemoteAddr() {
+    return remoteAddr;
   }
 
   @Override
@@ -45,13 +45,13 @@ public class User implements Principal {
     User user = (User) o;
     return Objects.equals(name, user.name) &&
       Objects.equals(email, user.email) &&
-      Objects.equals(host, user.host) &&
-      Objects.equals(persistentId, user.persistentId);
+      Objects.equals(persistentId, user.persistentId) &&
+      Objects.equals(remoteAddr, user.remoteAddr);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, email, host, persistentId);
+    return Objects.hash(name, email, persistentId, remoteAddr);
   }
 
   @Override
@@ -59,8 +59,8 @@ public class User implements Principal {
     return MoreObjects.toStringHelper(this)
                       .add("name", name)
                       .add("email", email)
-                      .add("host", host)
                       .add("persistentId", persistentId)
+                      .add("remoteAddr", remoteAddr)
                       .toString();
   }
 
@@ -68,7 +68,7 @@ public class User implements Principal {
     private final String name;
     private String id;
     private String email;
-    private String host;
+    private String remoteAddr;
 
     private Builder(String name) {
       this.name = name;
@@ -88,8 +88,8 @@ public class User implements Principal {
       return this;
     }
 
-    public Builder fromHost(String host) {
-      this.host = host;
+    public Builder withRemoteAddr(String remoteAddr) {
+      this.remoteAddr = remoteAddr;
       return this;
     }
 
@@ -97,7 +97,7 @@ public class User implements Principal {
       final User user = new User(name);
       user.persistentId = Optional.ofNullable(id);
       user.email = Optional.ofNullable(email);
-      user.host = Optional.ofNullable(host);
+      user.remoteAddr = Optional.ofNullable(remoteAddr);
       return user;
     }
   }

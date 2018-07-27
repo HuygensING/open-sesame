@@ -7,32 +7,19 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.common.collect.ImmutableList;
 import io.dropwizard.Application;
-import io.dropwizard.auth.AuthDynamicFeature;
-import io.dropwizard.auth.AuthFilter;
 import io.dropwizard.auth.AuthValueFactoryProvider;
-import io.dropwizard.auth.basic.BasicCredentialAuthFilter;
-import io.dropwizard.auth.chained.ChainedAuthFilter;
-import io.dropwizard.client.JerseyClientBuilder;
-import io.dropwizard.client.JerseyClientConfiguration;
 import io.dropwizard.jersey.setup.JerseyEnvironment;
 import io.dropwizard.setup.Environment;
 import nl.knaw.huc.di.sesame.SesameConfiguration.GoogleConfig;
 import nl.knaw.huc.di.sesame.auth.SessionManager;
 import nl.knaw.huc.di.sesame.auth.User;
-import nl.knaw.huc.di.sesame.auth.basic.BasicAuthenticator;
-import nl.knaw.huc.di.sesame.auth.basic.BasicAuthorizer;
-import nl.knaw.huc.di.sesame.auth.google.GoogleAuthFilter;
-import nl.knaw.huc.di.sesame.auth.google.GoogleAuthenticator;
 import nl.knaw.huc.di.sesame.auth.google.OAuth2Builder;
-import nl.knaw.huc.di.sesame.auth.huygens.HuygensAuthFilter;
-import nl.knaw.huc.di.sesame.auth.huygens.HuygensAuthenticator;
+import nl.knaw.huc.di.sesame.auth.AuthenticationFeature;
 import nl.knaw.huc.di.sesame.resources.GoogleLogin;
 import nl.knaw.huc.di.sesame.resources.Protected;
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.ws.rs.client.Client;
 
 import java.util.List;
 
@@ -72,47 +59,11 @@ public class SesameApplication extends Application<SesameConfiguration> {
 
   private void registerAuth(SesameConfiguration configuration, Environment environment) {
     final JerseyEnvironment jersey = environment.jersey();
-    jersey.register(new AuthDynamicFeature(new ChainedAuthFilter<>(createAuthFilters(configuration, environment))));
     jersey.register(RolesAllowedDynamicFeature.class);
+    jersey.register(new AuthenticationFeature(configuration, environment, sessionManager, getName()));
 
     // So we can use @Auth to inject a custom Principal type into our resources
     jersey.register(new AuthValueFactoryProvider.Binder<>(User.class));
-  }
-
-  private ImmutableList<AuthFilter> createAuthFilters(SesameConfiguration configuration, Environment environment) {
-    return ImmutableList.of(
-      createBasicCredentialAuthFilter(),
-      createHuygensCredentialAuthFilter(configuration, environment),
-      createGoogleCredentialAuthFilter());
-  }
-
-  private GoogleAuthFilter<User> createGoogleCredentialAuthFilter() {
-    return new GoogleAuthFilter.Builder<User>()
-      .setPrefix("Google")
-      .setRealm("Google OAuth Login")
-      .setAuthenticator(new GoogleAuthenticator(sessionManager))
-      .setAuthorizer(new BasicAuthorizer())
-      .buildAuthFilter();
-  }
-
-  private HuygensAuthFilter<User> createHuygensCredentialAuthFilter(SesameConfiguration configuration,
-                                                                    Environment environment) {
-    final Client client = createClient(environment, configuration.getJerseyClientConfiguration());
-
-    return new HuygensAuthFilter.Builder<User>()
-      .setPrefix("Huygens")
-      .setRealm("Federated Login")
-      .setAuthenticator(new HuygensAuthenticator(client, configuration.getFederatedAuthConfig()))
-      .setAuthorizer(new BasicAuthorizer())
-      .buildAuthFilter();
-  }
-
-  private BasicCredentialAuthFilter<User> createBasicCredentialAuthFilter() {
-    return new BasicCredentialAuthFilter.Builder<User>()
-      .setAuthenticator(new BasicAuthenticator())
-      .setAuthorizer(new BasicAuthorizer())
-      .setRealm("SECRET COW LEVEL")
-      .buildAuthFilter();
   }
 
   private void registerResources(SesameConfiguration configuration, JerseyEnvironment jersey) {
@@ -138,10 +89,6 @@ public class SesameApplication extends Application<SesameConfiguration> {
 
   private OAuth2Builder createOAuth2Builder() {
     return new OAuth2Builder(httpTransport, JSON_FACTORY, getName());
-  }
-
-  private Client createClient(Environment environment, JerseyClientConfiguration configuration) {
-    return new JerseyClientBuilder(environment).using(configuration).build(getName());
   }
 
 }

@@ -11,6 +11,11 @@ google:
 jerseyClient:
   timeout: 10s
 
+localAddresses:
+  - "localhost"
+  - "127.0.0.1"
+  - "0:0:0:0:0:0:0:1"
+
 logging:
   level: INFO
   appenders:

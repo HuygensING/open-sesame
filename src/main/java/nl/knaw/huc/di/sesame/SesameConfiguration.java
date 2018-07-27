@@ -8,6 +8,8 @@ import io.dropwizard.client.JerseyClientConfiguration;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+import java.util.List;
+
 public class SesameConfiguration extends Configuration {
   private CacheBuilderSpec authenticationCachePolicy;
 
@@ -26,6 +28,9 @@ public class SesameConfiguration extends Configuration {
   @JsonProperty("jerseyClient")
   private JerseyClientConfiguration jerseyClient = new JerseyClientConfiguration();
 
+  @JsonProperty("localAddresses")
+  private List<String> localAddresses;
+
   public CacheBuilderSpec getAuthenticationCachePolicy() {
     return authenticationCachePolicy;
   }
@@ -40,6 +45,10 @@ public class SesameConfiguration extends Configuration {
 
   public JerseyClientConfiguration getJerseyClientConfiguration() {
     return jerseyClient;
+  }
+
+  public List<String> getLocalAddresses() {
+    return localAddresses;
   }
 
   public static class FederatedAuthConfig {
