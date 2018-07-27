@@ -3,13 +3,11 @@ package nl.knaw.huc.di.sesame.auth;
 import com.google.common.collect.ImmutableList;
 import io.dropwizard.auth.AuthDynamicFeature;
 import io.dropwizard.auth.AuthFilter;
-import io.dropwizard.auth.basic.BasicCredentialAuthFilter;
 import io.dropwizard.auth.chained.ChainedAuthFilter;
 import io.dropwizard.client.JerseyClientBuilder;
 import io.dropwizard.client.JerseyClientConfiguration;
 import io.dropwizard.setup.Environment;
 import nl.knaw.huc.di.sesame.SesameConfiguration;
-import nl.knaw.huc.di.sesame.auth.basic.BasicAuthenticator;
 import nl.knaw.huc.di.sesame.auth.google.GoogleAuthFilter;
 import nl.knaw.huc.di.sesame.auth.google.GoogleAuthenticator;
 import nl.knaw.huc.di.sesame.auth.huygens.HuygensAuthFilter;
@@ -46,21 +44,12 @@ public class AuthenticationFeature implements Feature {
     final ServiceLocator serviceLocator = ServiceLocatorProvider.getServiceLocator(context);
 
     final List<AuthFilter> authFilters = ImmutableList.of(
-      createBasicCredentialAuthFilter(),
       createHuygensCredentialAuthFilter(serviceLocator),
       createGoogleCredentialAuthFilter());
 
     context.register(new AuthDynamicFeature(new ChainedAuthFilter<>(authFilters)));
 
     return true;
-  }
-
-  private BasicCredentialAuthFilter<User> createBasicCredentialAuthFilter() {
-    return new BasicCredentialAuthFilter.Builder<User>()
-      .setAuthenticator(new BasicAuthenticator())
-      .setAuthorizer(authorizer)
-      .setRealm("SECRET COW LEVEL")
-      .buildAuthFilter();
   }
 
   private HuygensAuthFilter<User> createHuygensCredentialAuthFilter(ServiceLocator serviceLocator) {
