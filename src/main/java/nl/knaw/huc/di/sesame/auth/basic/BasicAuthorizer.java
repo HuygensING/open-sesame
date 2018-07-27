@@ -18,6 +18,11 @@ public class BasicAuthorizer implements Authorizer<User> {
       case "ADMIN":
         return "Hayco de Jong".equals(name);
 
+      case "LOCAL":
+        final boolean isAccessingLocalhost = user.getHost().map("localhost"::equals).orElse(false);
+        LOG.trace("Checking if {} is accessing a localhost URI: {}", user.getName(), isAccessingLocalhost);
+        return isAccessingLocalhost;
+
       default:
         return "Aladdin".equals(name);
     }

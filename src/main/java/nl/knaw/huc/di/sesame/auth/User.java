@@ -9,8 +9,9 @@ import java.util.Optional;
 public class User implements Principal {
   private final String name;
 
-  private Optional<String> persistentId;
   private Optional<String> email;
+  private Optional<String> host;
+  private Optional<String> persistentId;
 
   private User(String name) {
     this.name = name;
@@ -21,12 +22,16 @@ public class User implements Principal {
     return name;
   }
 
-  public Optional<String> getPersistentId() {
-    return persistentId;
-  }
-
   public Optional<String> getEmail() {
     return email;
+  }
+
+  public Optional<String> getHost() {
+    return host;
+  }
+
+  public Optional<String> getPersistentId() {
+    return persistentId;
   }
 
   @Override
@@ -39,21 +44,23 @@ public class User implements Principal {
     }
     User user = (User) o;
     return Objects.equals(name, user.name) &&
-      Objects.equals(persistentId, user.persistentId) &&
-      Objects.equals(email, user.email);
+      Objects.equals(email, user.email) &&
+      Objects.equals(host, user.host) &&
+      Objects.equals(persistentId, user.persistentId);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, persistentId, email);
+    return Objects.hash(name, email, host, persistentId);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
                       .add("name", name)
-                      .add("persistentId", persistentId)
                       .add("email", email)
+                      .add("host", host)
+                      .add("persistentId", persistentId)
                       .toString();
   }
 
@@ -61,6 +68,7 @@ public class User implements Principal {
     private final String name;
     private String id;
     private String email;
+    private String host;
 
     private Builder(String name) {
       this.name = name;
@@ -80,10 +88,16 @@ public class User implements Principal {
       return this;
     }
 
+    public Builder fromHost(String host) {
+      this.host = host;
+      return this;
+    }
+
     public User build() {
       final User user = new User(name);
       user.persistentId = Optional.ofNullable(id);
       user.email = Optional.ofNullable(email);
+      user.host = Optional.ofNullable(host);
       return user;
     }
   }

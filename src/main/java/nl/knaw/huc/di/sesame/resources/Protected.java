@@ -21,8 +21,16 @@ public class Protected {
   @GET
   @RolesAllowed("ADMIN")
   @Path("email")
-  public String postGreeting(@Auth Optional<User> userOpt) {
+  public String getEmail(@Auth Optional<User> userOpt) {
     final String email = userOpt.flatMap(User::getEmail).orElse("e-mail address unknown");
-    return String.format("Email: %s\n", email);
+    final boolean isAccessingLocalhost = userOpt.flatMap(User::getHost).map("localhost"::equals).orElse(false);
+    return String.format("Email: %s\nLocal: %s\n", email, isAccessingLocalhost);
+  }
+
+  @GET
+  @RolesAllowed("LOCAL")
+  @Path("local")
+  public String fromLocalOnly(@Auth Optional<User> userOpt) {
+    return String.format("Host: %s\n", userOpt.flatMap(User::getHost).orElse("unknown"));
   }
 }
