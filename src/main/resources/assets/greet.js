@@ -9,7 +9,7 @@ function greet(func) {
     getGreeting('Google ' + googleId, func)
   }
   else {
-    item.text("Welcome. Please login.")
+    func("Welcome. Please login.")
   }
 }
 

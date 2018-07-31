@@ -1,0 +1,12 @@
+.login .separator {
+    display: inline;
+    margin-right: 5px;
+    border-right: 2px solid #7f7f7f;
+}
+
+#greeting {
+    font-family: verdana, monospace;
+    font-size: x-large;
+    margin-top: 24px;
+    margin-bottom: 24px;
+}

@@ -3,38 +3,21 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>Test</title>
+  <link rel="stylesheet" href="main.css"/>
 </head>
 <body>
 
 <div id="greeting"></div>
-<br/>
 
-<div id="login">Login using
-  <ul>
-    <li id="federated">Federated Login</li>
-    <li id="google">Google account</li>
-  </ul>
+<div class="login">
+  <button id="federated">Federated Login</button>
+  <div class="separator"></div>
+  <button id="google">Google account</button>
 </div>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="greet.js"></script>
 <script src="login.js"></script>
-<script type="text/javascript">
-  $(document).ready(function() {
-    greet(function(str) {
-      $('#greeting').text(str)
-    });
-  })
-
-  $('#federated').click(function() {
-    loginFederated();
-  })
-
-  $('#google').click(function() {
-    loginGoogle();
-  })
-
-</script>
-
+<script src="main.js"></script>
 </body>
 </html>
