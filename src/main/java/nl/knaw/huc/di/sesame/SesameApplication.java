@@ -19,14 +19,14 @@ import nl.knaw.huc.di.sesame.auth.User;
 import nl.knaw.huc.di.sesame.auth.google.OAuth2Builder;
 import nl.knaw.huc.di.sesame.resources.GoogleLogin;
 import nl.knaw.huc.di.sesame.resources.Protected;
+import nl.knaw.huc.di.sesame.resources.argos.Argos;
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.List;
 
 public class SesameApplication extends Application<SesameConfiguration> {
-  private static final Logger LOG = LoggerFactory.getLogger(SesameApplication.class);
+  // private static final Logger LOG = LoggerFactory.getLogger(SesameApplication.class);
 
   private static final String APPLICATION_NAME = "Open Sesame";
 
@@ -73,7 +73,8 @@ public class SesameApplication extends Application<SesameConfiguration> {
     jersey.register(new AuthValueFactoryProvider.Binder<>(User.class));
   }
 
-  private void registerResources(SesameConfiguration configuration, JerseyEnvironment jersey) {
+  private void registerResources(SesameConfiguration configuration, JerseyEnvironment jersey) throws IOException {
+    jersey.register(new Argos());
     jersey.register(createGoogleLoginResource(configuration.getGoogleConfig()));
     jersey.register(Protected.class);
   }
