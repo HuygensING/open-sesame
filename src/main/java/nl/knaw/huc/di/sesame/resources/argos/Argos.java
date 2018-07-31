@@ -1,8 +1,5 @@
 package nl.knaw.huc.di.sesame.resources.argos;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -20,7 +17,7 @@ import static java.util.stream.Collectors.toList;
 @Path("argos")
 @Produces(MediaType.APPLICATION_JSON)
 public class Argos {
-  private static final Logger LOG = LoggerFactory.getLogger(Argos.class);
+  // private static final Logger LOG = LoggerFactory.getLogger(Argos.class);
 
   private static final String EXT_JPG = ".jpg";
   private static final String EXT_HOCR = ".hocr";
