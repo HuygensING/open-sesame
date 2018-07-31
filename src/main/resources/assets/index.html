@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Test</title>
+</head>
+<body>
+
+<div id="greeting"></div>
+<br/>
+
+<div id="login">Login using
+  <ul>
+    <li id="federated">Federated Login</li>
+    <li id="google">Google account</li>
+  </ul>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="greet.js"></script>
+<script src="login.js"></script>
+<script type="text/javascript">
+  $(document).ready(function() {
+    greet($('#greeting'));
+  })
+
+  $('#federated').click(function() {
+    loginFederated();
+  })
+
+  $('#google').click(function() {
+    loginGoogle();
+  })
+
+</script>
+
+</body>
+</html>

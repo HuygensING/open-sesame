@@ -7,14 +7,16 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.common.collect.ImmutableList;
 import io.dropwizard.Application;
+import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.auth.AuthValueFactoryProvider;
 import io.dropwizard.jersey.setup.JerseyEnvironment;
+import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import nl.knaw.huc.di.sesame.SesameConfiguration.GoogleConfig;
+import nl.knaw.huc.di.sesame.auth.AuthenticationFeature;
 import nl.knaw.huc.di.sesame.auth.SessionManager;
 import nl.knaw.huc.di.sesame.auth.User;
 import nl.knaw.huc.di.sesame.auth.google.OAuth2Builder;
-import nl.knaw.huc.di.sesame.auth.AuthenticationFeature;
 import nl.knaw.huc.di.sesame.resources.GoogleLogin;
 import nl.knaw.huc.di.sesame.resources.Protected;
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
@@ -48,6 +50,11 @@ public class SesameApplication extends Application<SesameConfiguration> {
   @Override
   public String getName() {
     return APPLICATION_NAME;
+  }
+
+  @Override
+  public void initialize(Bootstrap<SesameConfiguration> bootstrap) {
+    bootstrap.addBundle(new AssetsBundle("/assets/", "/", "/index.html"));
   }
 
   @Override
