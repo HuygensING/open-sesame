@@ -15,7 +15,8 @@ public class Protected {
   @GET
   public String getGreeting(@Auth Optional<User> userOpt) {
     final String name = userOpt.map(User::getName).orElse("anonymous user");
-    return String.format("Hello, %s\n", name);
+    final String email = userOpt.flatMap(User::getEmail).orElse("unknown");
+    return String.format("Hello, %s (%s)\n", name, email);
   }
 
   @GET

@@ -1,33 +1,26 @@
-function greet(item) {
+function greet(func) {
   var huygensId = getParameterByName('hsid');
   var googleId = getParameterByName('gsid');
 
   if (huygensId.length > 0) {
-    $.ajax({
-      headers: {'Authorization': 'Huygens ' + huygensId},
-      url: 'http://localhost:8080/api/protected',
-      error: function(data) {
-        console.log(data)
-      },
-      success: function(data) {
-        item.text(data + ' (via Huygens)')
-      },
-      type: 'GET'
-    })
+    getGreeting('Huygens ' + huygensId, func)
   }
   else if (googleId.length > 0) {
+    getGreeting('Google ' + googleId, func)
+  }
+  else {
+    item.text("Welcome. Please login.")
+  }
+}
+
+function getGreeting(auth, func) {
     $.ajax({
-      headers: {'Authorization': 'Google ' + googleId},
+      headers: {'Authorization': auth},
       url: 'http://localhost:8080/api/protected',
       error: function(data) {
         console.log(data)
       },
-      success: function(data) {
-        item.text(data + ' (via Google)')
-      },
+      success: func,
       type: 'GET'
     })
-  } else {
-    item.text("Welcome. Please login.")
-  }
 }

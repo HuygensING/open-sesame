@@ -21,7 +21,9 @@
 <script src="login.js"></script>
 <script type="text/javascript">
   $(document).ready(function() {
-    greet($('#greeting'));
+    greet(function(str) {
+      $('#greeting').text(str)
+    });
   })
 
   $('#federated').click(function() {
