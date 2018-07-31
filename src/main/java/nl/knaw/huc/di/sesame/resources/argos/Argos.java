@@ -47,7 +47,7 @@ public class Argos {
 
   @GET
   @Path("docs")
-  public List<String> listDocs() throws IOException {
+  public List<String> listDocs() {
     return documents;
   }
 
