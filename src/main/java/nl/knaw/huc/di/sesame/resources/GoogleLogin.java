@@ -26,10 +26,10 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static javax.ws.rs.core.HttpHeaders.WWW_AUTHENTICATE;
 import static nl.knaw.huc.di.sesame.resources.GoogleLogin.RESOURCE_NAME;
@@ -42,7 +42,7 @@ public class GoogleLogin {
   private static final String CALLBACK_PATH = "oauth2";
   private static final String WWW_AUTH_BEARER_AND_REALM = "DI Huc realm=Google Login";
 
-  // The *exact* redirect URI name MUST be Registered @Google Dashboard for this Client ID
+  // The *exact* redirect URI name MUST be Registered @Google Dashboard for the Client ID in use
   private static final String REDIRECT_URI = "http://localhost:8080/api/" + RESOURCE_NAME + "/" + CALLBACK_PATH;
   private static final Logger LOG = LoggerFactory.getLogger(GoogleLogin.class);
 
@@ -51,6 +51,7 @@ public class GoogleLogin {
   private final SessionManager sessionManager;
   private final Map<UUID, String> returnURLs;
   private final boolean usePersistentCredentialStore;
+
   @Context
   private HttpServletRequest servletRequest;
 
@@ -65,7 +66,8 @@ public class GoogleLogin {
     this.oAuth2Builder = oAuth2Builder;
     this.sessionManager = sessionManager;
     this.usePersistentCredentialStore = usePersistentCredentialStore;
-    this.returnURLs = new HashMap<>();
+
+    returnURLs = new ConcurrentHashMap<>();
   }
 
   @GET
