@@ -254,7 +254,7 @@ HocrProofreader.prototype.renderPage = function (pageNode) {
     this.layoutSvg.setAttribute('viewBox', pageOptions.bbox.join(' '));
     this.layoutWords.style.fontFamily = 'Liberation Serif, serif'; // TODO: use font from hOCR (per page)
 
-    this.layoutImage.setAttributeNS('http://www.w3.org/1999/xlink', 'href', this.hocrBaseUrl + pageOptions.image);
+    this.layoutImage.setAttributeNS('http://www.w3.org/1999/xlink', 'href', this.hocrBaseUrl + '/image');
 
     if (pageOptions.textangle) {
         // textangle is counter-clockwise, so we have to rotate the image clockwise - and transform-rotate() is clockwise:
@@ -301,7 +301,7 @@ HocrProofreader.prototype.renderNodesRecursive = function (node, options, parent
                 var textNode = Util.createSvgElem('text', {
                     'x': options.bbox[0],
                     'y': parseFloat(options.baselineBbox[3]) + parseFloat(options.baseline[1]),
-                    'font-size': options.x_fsize * options.scan_res[1] / 72, // 1 pt = 1/72 inch
+                    'font-size': options.x_fsize * /* options.scan_res[1] */ 300 / 72, // 1 pt = 1/72 inch
                     'textLength': options.bbox[2] - options.bbox[0],
                     'lengthAdjust': 'spacingAndGlyphs'
                 });

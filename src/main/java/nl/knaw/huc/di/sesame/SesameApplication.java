@@ -1,5 +1,6 @@
 package nl.knaw.huc.di.sesame;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow.Builder;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
@@ -42,6 +43,7 @@ public class SesameApplication extends Application<SesameConfiguration> {
   private static HttpTransport httpTransport;
 
   private final SessionManager sessionManager = new SessionManager();
+  private ObjectMapper objectMapper;
 
   public static void main(String[] args) throws Exception {
     new SesameApplication().run(args);
@@ -55,6 +57,7 @@ public class SesameApplication extends Application<SesameConfiguration> {
   @Override
   public void initialize(Bootstrap<SesameConfiguration> bootstrap) {
     bootstrap.addBundle(new AssetsBundle("/assets/", "/", "/index.html"));
+    objectMapper = bootstrap.getObjectMapper();
   }
 
   @Override
@@ -74,7 +77,7 @@ public class SesameApplication extends Application<SesameConfiguration> {
   }
 
   private void registerResources(SesameConfiguration configuration, JerseyEnvironment jersey) throws IOException {
-    jersey.register(new Argos());
+    jersey.register(new Argos(objectMapper.getFactory(), "/proofreader"));
     jersey.register(createGoogleLoginResource(configuration.getGoogleConfig()));
     jersey.register(Protected.class);
   }
