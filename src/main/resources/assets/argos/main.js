@@ -1,6 +1,8 @@
 'use strict';
 
 Util.onReady(function () {
+    var hocrBaseUrl = '/api/argos/NL-HaNA_1.01.02_3795_0127';
+
     var hocrProofreader = new HocrProofreader({
         layoutContainer: 'layout-container',
         editorContainer: 'editor-container'
@@ -26,7 +28,7 @@ Util.onReady(function () {
         var hocr = hocrProofreader.getHocr();
 
         var request = new XMLHttpRequest();
-        request.open('POST', '/api/argos');
+        request.open('PUT', hocrBaseUrl + '/text');
         request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=utf-8');
         request.send('hocr=' + encodeURIComponent(hocr));
     });
@@ -40,9 +42,7 @@ Util.onReady(function () {
       console.log('auth: ' + sessionStorage.auth);
     });
 
-    var hocrBaseUrl = '/api/argos/NL-HaNA_1.01.02_3795_0127';
     var hocrUrl = hocrBaseUrl + '/hocr';
-
     Util.get(hocrUrl, function (err, hocr) {
         if (err) return Util.handleError(err);
 

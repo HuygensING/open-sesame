@@ -6,16 +6,21 @@ import nl.knaw.huc.di.sesame.util.Streamer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -82,6 +87,15 @@ public class Argos {
   @Produces("image/jpeg")
   public StreamingOutput getImage(@PathParam("id") String documentId) {
     return streamer.stream(documentId + EXT_JPG);
+  }
+
+  @PUT
+  @Path("{id}/text")
+  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+  public Response putText(@PathParam("id")String documentId, @FormParam("hocr") String text) throws IOException {
+    LOG.trace("document: {}, text: {}", documentId, text.substring(0, 1000) + "...");
+    Files.write(Paths.get("/tmp", documentId + ".xml"), Collections.singleton(text));
+    return Response.noContent().build();
   }
 
 }
