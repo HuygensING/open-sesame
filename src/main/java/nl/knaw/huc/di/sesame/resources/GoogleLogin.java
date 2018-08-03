@@ -173,7 +173,7 @@ public class GoogleLogin {
     }
 
     final User owner = ownerOpt.get();
-    if (deleter != ownerOpt.get()) { // equals() not necessary, it really must be the same!
+    if (deleter != owner) { // equals() not necessary, it really must be the same!
       LOG.warn("Deleter {} trying to delete session owned by: {}", deleter, owner);
       throw new ForbiddenException("Not owner");
     }
