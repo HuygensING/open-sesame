@@ -5,22 +5,21 @@ function loginFederated() {
   var loginURL = 'https://secure.huygens.knaw.nl/saml2/login';
   var returnURL = wl.origin + wl.pathname;//'http://localhost:8080/index.html';
 
-  var form = $('<form>').attr({
-      method: 'POST',
-      action: loginURL
-  });
+  var form = document.createElement('FORM');
+  form.method = 'POST';
+  form.action = loginURL;
 
-  hsUrlEl = $('<input>').attr({
-      name: 'hsurl', value: returnURL, type: 'hidden'
-  });
-  form.append(hsUrlEl);
+  var hsUrlEl = document.createElement('INPUT');
+  hsUrlEl.name = 'hsurl';
+  hsUrlEl.value = returnURL;
+  form.appendChild(hsUrlEl);
 
-  hsViaEl = $('<input>').attr({
-      name: 'hsvia', value: hsVia, type: 'hidden'
-  });
-  form.append(hsViaEl);
+  var hsViaEl = document.createElement('INPUT');
+  hsViaEl.name = 'hsvia';
+  hsViaEl.value = hsVia;
+  form.appendChild(hsViaEl);
 
-  $('body').append(form);
+  document.body.appendChild(form);
   form.submit();
 }
 

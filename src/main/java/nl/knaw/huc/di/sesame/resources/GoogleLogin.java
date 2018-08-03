@@ -15,8 +15,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
@@ -142,6 +145,28 @@ public class GoogleLogin {
     }
 
     return unauthorized("Unable to verify auth token: " + code);
+  }
+
+  @DELETE
+  @Path("{id}")
+  public Response delete(@PathParam("id") String session) {
+    final UUID sessionId;
+    try {
+      sessionId = UUID.fromString(session);
+    } catch (IllegalArgumentException e) {
+      final String message = String.format("Invalid sessionId: %s", session);
+      LOG.trace(message);
+      throw new BadRequestException(message);
+    }
+
+    LOG.debug("deleting session: {}", sessionId);
+    if (sessionManager.delete(sessionId)) {
+      return Response.noContent().build();
+    }
+
+    final String message = String.format("No such session: %s", sessionId.toString());
+    LOG.trace(message);
+    throw new NotFoundException(message);
   }
 
   private Optional<Credential> authorize(String code) throws IOException {
