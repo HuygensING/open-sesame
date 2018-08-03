@@ -6,6 +6,7 @@ import nl.knaw.huc.di.sesame.util.Streamer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -90,10 +91,10 @@ public class Argos {
   }
 
   @PUT
+  @RolesAllowed("DDB")
   @Path("{id}/text")
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   public Response putText(@PathParam("id")String documentId, @FormParam("hocr") String text) throws IOException {
-    LOG.trace("document: {}, text: {}", documentId, text.substring(0, 1000) + "...");
     Files.write(Paths.get("/tmp", documentId + ".xml"), Collections.singleton(text));
     return Response.noContent().build();
   }

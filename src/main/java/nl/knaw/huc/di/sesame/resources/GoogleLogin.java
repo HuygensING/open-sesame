@@ -7,6 +7,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.services.oauth2.Oauth2;
 import com.google.api.services.oauth2.Oauth2.Userinfo;
 import com.google.api.services.oauth2.model.Userinfoplus;
+import io.dropwizard.auth.Auth;
 import nl.knaw.huc.di.sesame.auth.SessionManager;
 import nl.knaw.huc.di.sesame.auth.User;
 import nl.knaw.huc.di.sesame.auth.google.OAuth2Builder;
@@ -16,7 +17,9 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.GET;
+import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -34,7 +37,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static javax.ws.rs.core.HttpHeaders.WWW_AUTHENTICATE;
 import static nl.knaw.huc.di.sesame.resources.GoogleLogin.RESOURCE_NAME;
 
 @Path(RESOURCE_NAME)
@@ -107,49 +109,54 @@ public class GoogleLogin {
     LOG.trace("googleCallback, state=[{}], code=[{}]", state, code);
 
     if (code == null) {
-      return unauthorized("Missing required 'code' parameter");
+      deny("Missing required 'code' parameter");
     }
 
     if (state == null) {
-      return unauthorized("Missing required 'state' parameter");
+      deny("Missing required 'state' parameter");
     }
 
     final UUID sessionId;
     try {
       sessionId = UUID.fromString(state);
     } catch (IllegalArgumentException e) {
-      LOG.warn("Invalid UUID in state: {}", state);
-      return unauthorized(String.format("Parameter 'state' is not a valid UUID: %s", state));
+      return deny(String.format("Parameter 'state' is not a valid UUID: %s", state));
     }
 
     final Optional<Userinfo> optionalUserInfo = authorize(code).map(oAuth2Builder::build).map(Oauth2::userinfo);
-    if (optionalUserInfo.isPresent()) {
-      final Userinfo userInfo = optionalUserInfo.get();
-      LOG.trace("userInfo: {}", userInfo);
-
-      final Userinfoplus userinfoplus = userInfo.get().execute();
-      LOG.trace("Google says: userinfoplus={}", userinfoplus.toPrettyString());
-
-      final User user = createUser(userinfoplus);
-      sessionManager.register(sessionId, user);
-
-      final String returnURL = returnURLs.remove(sessionId);
-      if (returnURL != null) {
-        final URI location = URI.create(String.format("%s?gsid=%s", returnURL, sessionId));
-        LOG.trace("returning to: {}", location);
-        return Response.seeOther(location).build();
-      }
-
-      final String message = String.format("{\"sessionId\": \"%s\"}", sessionId);
-      return ok(message);
+    if (!optionalUserInfo.isPresent()) {
+      deny("Unable to verify auth token: " + code);
     }
 
-    return unauthorized("Unable to verify auth token: " + code);
+    final Userinfo userInfo = optionalUserInfo.get();
+    LOG.trace("userInfo: {}", userInfo);
+
+    final Userinfoplus userinfoplus = userInfo.get().execute();
+    LOG.trace("Google says: userinfoplus={}", userinfoplus.toPrettyString());
+
+    final User user = createUser(userinfoplus);
+    sessionManager.register(sessionId, user);
+
+    final String returnURL = returnURLs.remove(sessionId);
+    if (returnURL != null) {
+      final URI location = URI.create(String.format("%s?gsid=%s", returnURL, sessionId));
+      LOG.trace("returning to: {}", location);
+      return Response.seeOther(location).build();
+    }
+
+    final String message = String.format("{\"sessionId\": \"%s\"}", sessionId);
+    return ok(message);
   }
 
   @DELETE
   @Path("{id}")
-  public Response delete(@PathParam("id") String session) {
+  public Response delete(@Auth Optional<User> deleterOpt, @PathParam("id") String session) {
+    if (!deleterOpt.isPresent()) {
+      LOG.warn("unauthenticated user trying to delete session: {}", session);
+      deny("Missing credentials");
+    }
+    final User deleter = deleterOpt.get();
+
     final UUID sessionId;
     try {
       sessionId = UUID.fromString(session);
@@ -159,14 +166,21 @@ public class GoogleLogin {
       throw new BadRequestException(message);
     }
 
-    LOG.debug("deleting session: {}", sessionId);
-    if (sessionManager.delete(sessionId)) {
-      return Response.noContent().build();
+    final Optional<User> ownerOpt = sessionManager.find(sessionId);
+    if (!ownerOpt.isPresent()) {
+      LOG.warn("authenticated user {} trying to delete non-existent session: {}", deleter, session);
+      throw new NotFoundException("No such session: " + session);
     }
 
-    final String message = String.format("No such session: %s", sessionId.toString());
-    LOG.trace(message);
-    throw new NotFoundException(message);
+    final User owner = ownerOpt.get();
+    if (deleter != ownerOpt.get()) { // equals() not necessary, it really must be the same!
+      LOG.warn("Deleter {} trying to delete session owned by: {}", deleter, owner);
+      throw new ForbiddenException("Not owner");
+    }
+
+    LOG.debug("deleting session: {}", sessionId);
+    sessionManager.delete(sessionId);
+    return Response.noContent().build();
   }
 
   private Optional<Credential> authorize(String code) throws IOException {
@@ -209,10 +223,7 @@ public class GoogleLogin {
                    .build();
   }
 
-  private Response unauthorized(String message) {
-    return Response.status(Response.Status.UNAUTHORIZED)
-                   .entity(String.format("{\"error\":\"%s\"}", message))
-                   .header(WWW_AUTHENTICATE, WWW_AUTH_BEARER_AND_REALM)
-                   .build();
+  private Response deny(String message) {
+    throw new NotAuthorizedException(String.format("{\"error\":\"%s\"}", message), WWW_AUTH_BEARER_AND_REALM);
   }
 }

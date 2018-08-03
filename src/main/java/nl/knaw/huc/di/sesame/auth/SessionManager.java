@@ -28,7 +28,7 @@ public class SessionManager {
     sessions.put(checkNotNull(sessionId), checkNotNull(user));
   }
 
-  public boolean delete(UUID sessionId) {
-    return sessions.remove(checkNotNull(sessionId)) != null;
+  public void delete(UUID sessionId) {
+    sessions.remove(checkNotNull(sessionId));
   }
 }

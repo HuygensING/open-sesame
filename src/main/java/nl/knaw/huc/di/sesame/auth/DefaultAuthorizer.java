@@ -25,6 +25,9 @@ public class DefaultAuthorizer implements Authorizer<User> {
       case "ADMIN":
         return "Hayco de Jong".equals(name);
 
+      case "DDB":
+        return user.getEmail().map(email -> email.contains("jong")).orElse(false);
+
       case "LOCAL":
         return isLocal(user);
 
