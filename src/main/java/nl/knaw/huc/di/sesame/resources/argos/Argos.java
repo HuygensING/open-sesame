@@ -53,7 +53,8 @@ public class Argos {
                 .map(java.nio.file.Path::toString)
                 .filter(IS_JPG)
                 .filter(HAS_HOCR_COMPANION)
-                .map(this::extractDocumentId);
+                .map(this::extractDocumentId)
+                .sorted();
   }
 
   @GET
@@ -94,7 +95,7 @@ public class Argos {
   @RolesAllowed("DDB")
   @Path("{id}/text")
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-  public Response putText(@PathParam("id")String documentId, @FormParam("hocr") String text) throws IOException {
+  public Response putText(@PathParam("id") String documentId, @FormParam("hocr") String text) throws IOException {
     Files.write(Paths.get("/tmp", documentId + ".xml"), Collections.singleton(text));
     return Response.noContent().build();
   }

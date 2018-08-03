@@ -2,12 +2,31 @@
 
 Util.onReady(function () {
     var apiUrl = '/api'
-    var hocrBaseUrl = apiUrl + '/argos/NL-HaNA_1.01.02_3795_0127';
+    var argosUrl = apiUrl + '/argos';
+
+    var documentId = getParameterByName('doc');
+
+    if (!documentId) {
+        documentId = sessionStorage.documentId;
+
+        if (!documentId) {
+            documentId = 'NL-HaNA_1.01.02_3795_0127'; // arbitrary default page
+        }
+
+        window.location = window.location.href.split('?')[0] + '?doc=' + documentId;
+    }
+
+    console.log('documentId: ' + documentId);
+    sessionStorage.documentId = documentId;
+
+    var hocrBaseUrl = argosUrl + '/' + documentId;
 
     var hocrProofreader = new HocrProofreader({
         layoutContainer: 'layout-container',
         editorContainer: 'editor-container'
     });
+
+    document.getElementById('select-file').addEventListener('click', listFiles)
 
     document.getElementById('toggle-layout-image').addEventListener('click', function () {
         hocrProofreader.toggleLayoutImage();
@@ -54,6 +73,7 @@ Util.onReady(function () {
             if (err) return Util.handleError(err);
 
             hocrProofreader.setHocr(hocr, hocrBaseUrl);
+            document.title = 'hOCR-Proofreader :: ' + sessionStorage.documentId;
         });
     }
 
@@ -69,6 +89,36 @@ Util.onReady(function () {
       var regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
       var results = regex.exec(location.search);
       return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+    }
+
+    function listFiles() {
+        delete sessionStorage.hocr; // drop unsaved changes if you switch to another document
+
+        var xhr = new XMLHttpRequest();
+        xhr.onload = function () {
+            var jsonResponse = xhr.response;
+            var lc = document.getElementById('list-container')
+            while (lc.firstChild) {
+                lc.removeChild(lc.firstChild);
+            }
+            var ul = document.createElement("UL");
+            lc.appendChild(ul);
+
+            for (var i=0; i < jsonResponse.length; i++) {
+                var documentId = jsonResponse[i];
+                var li = document.createElement('LI');
+                li.value = i;
+                var a = document.createElement("A");
+                var locationWithoutParams = window.location.href.split('?')[0];
+                a.href = locationWithoutParams + '?doc=' + documentId;
+                a.appendChild(document.createTextNode(documentId));
+                li.appendChild(a);
+                ul.appendChild(li);
+            }
+        };
+        xhr.open('GET', argosUrl);
+        xhr.responseType = 'json';
+        xhr.send();
     }
 
     function logout(cleanup = true) {
@@ -112,7 +162,8 @@ Util.onReady(function () {
 
     function reloadWithoutParams() {
         var locationWithoutParams = window.location.href.split('?')[0];
-        location.replace(locationWithoutParams);
+        var documentId = getParameterByName('doc');
+        location.replace(locationWithoutParams + '?doc=' + documentId);
     }
 
     function save() {
