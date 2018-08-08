@@ -177,14 +177,15 @@ Util.onReady(function () {
             if (this.readyState == XMLHttpRequest.DONE) {
                 // TODO: ik zou zeggen: maak er iets moois van.
                 if (this.status == 204) {
-                    alert("Opgeslagen op server.");
+                    alert("Text stored.");
                     delete sessionStorage.hocr;
                 }
                 if (this.status == 401) {
                     logout(false);
-                    alert("Je sessie is verlopen. Log opnieuw in.");
+                    alert("Your session has expired. Please login.");
                 }
-                if (this.status == 403) alert("Toegang geweigerd.");
+                if (this.status == 403) alert("Access denied.");
+                if (this.status == 500) alert("Server hickup.\n\n" + this.response)
             }
         };
         xhr.send('hocr=' + encodeURIComponent(hocr));

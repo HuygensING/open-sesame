@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -38,12 +39,27 @@ public class HuygensAuthenticator implements Authenticator<UUID, User> {
     LOG.debug("Authenticating session: {}", sessionId);
 
     LOG.trace("targeting security server: {}", securityServerURL);
-    final HuygensDetails huygensDetails = client.target(securityServerURL)
-                                                .path("sessions").path(sessionId.toString())
-                                                .request()
-                                                .accept(MediaType.APPLICATION_JSON_TYPE)
-                                                .header(HttpHeaders.AUTHORIZATION, credentials)
-                                                .get(HuygensDetails.class);
+    final HuygensDetails huygensDetails;
+
+    try {
+      huygensDetails = client.target(securityServerURL)
+                             .path("sessions").path(sessionId.toString())
+                             .request()
+                             .accept(MediaType.APPLICATION_JSON_TYPE)
+                             .header(HttpHeaders.AUTHORIZATION, credentials)
+                             .get(HuygensDetails.class);
+    } catch (WebApplicationException e) {
+      if (e.getResponse() != null) {
+        final String message = e.getResponse().readEntity(String.class);
+        if (message.startsWith("Unknown session:")) {
+          LOG.trace(message);
+        } else {
+          LOG.warn("Exception while dealing with security server: {}", message);
+        }
+      }
+      return Optional.empty(); // hide issue
+    }
+
     LOG.trace("huygensDetails: {}", huygensDetails);
 
     if (huygensDetails == null) {
