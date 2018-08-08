@@ -16,7 +16,6 @@ Util.onReady(function () {
         window.location = window.location.href.split('?')[0] + '?doc=' + documentId;
     }
 
-    console.log('documentId: ' + documentId);
     sessionStorage.documentId = documentId;
 
     var hocrBaseUrl = argosUrl + '/' + documentId;
