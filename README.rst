@@ -31,13 +31,13 @@ For the Google authentication part to work you will have to obtain a
 
     - Select the ``Credentials`` setting from the sidebar on the left.
     - Select ``Create credentials`` for an ``OAuth client ID``.
-    - Select ``Web application`` as the `Application type`.
-    - Leave `Authorized JavaScript origins` empty.
-    - Under `Authorized redirect URIs`, enter the proper URL where Google
+    - Select ``Web application`` as the *Application type*.
+    - Leave *Authorized JavaScript origins* empty.
+    - Under *Authorized redirect URIs*, enter the proper URL where Google
       will redirect the browser after authentication is complete, passing
       auth token and state:
 
-      - For local testing, use http://localhost:8080/api/google/oauth2
+      - For local testing, use ``http://localhost:8080/api/google/oauth2``
         if your server will be running on the default ``localhost``,
         port ``8080``.
       - Multiple URLs are allowed in the dashboard and changes in the
@@ -48,13 +48,13 @@ For the Google authentication part to work you will have to obtain a
 * Copy ``config-template.yaml`` to, e.g., ``config.yaml``, then edit
   ``config.yaml`` to setup:
 
-  - your Google `Client ID` and `Client Secret`::
+  - your Google ``Client ID`` and ``Client Secret``::
 
       google:
         clientId: your-client-id-here.apps.googleusercontent.com
         clientSecret: your-client-secret-here
 
-  - your Huygens Federated secret (supplied by Concern Infrastructure)::
+  - your ``Huygens Security Server`` secret (supplied by Concern Infrastructure)::
 
       federatedAuthentication:
         credentials: Huygens security-server-key-here
