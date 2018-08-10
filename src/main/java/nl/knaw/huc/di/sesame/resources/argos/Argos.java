@@ -29,11 +29,15 @@ import java.util.stream.Stream;
 public class Argos {
   private static final Logger LOG = LoggerFactory.getLogger(Argos.class);
 
-  private static final String EXT_JPG = ".jpg";
   private static final String EXT_HOCR = ".hocr";
+  private static final String EXT_JPG = ".jpg";
+  private static final String EXT_XML = ".xml";
+
+  private static final String TMP_DIR = "/tmp";
 
   private static final Predicate<String> IS_JPG = name -> name.endsWith(EXT_JPG);
   private static final Predicate<String> HAS_HOCR_COMPANION = name -> Files.exists(Paths.get(name + EXT_HOCR));
+
   private final JsonFactory factory;
   private final String baseDir;
   private final Streamer streamer;
@@ -96,7 +100,7 @@ public class Argos {
   @Path("{id}/text")
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   public Response putText(@PathParam("id") String documentId, @FormParam("hocr") String text) throws IOException {
-    Files.write(Paths.get("/tmp", documentId + ".xml"), Collections.singleton(text));
+    Files.write(Paths.get(TMP_DIR, documentId + EXT_XML), Collections.singleton(text));
     return Response.noContent().build();
   }
 
