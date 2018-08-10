@@ -73,6 +73,14 @@ and visit `<http://localhost:8080/argos/index.html>`_
 Source
 ------
 
+Some stuff is currently still hardwired, which can easily be migrated
+to configuration time bindings:
+
+  * HOCR files' location is hardwired in
+    ``nl.knaw.huc.di.sesame.SesameApplication#registerResources``
+  * uploaded files are dumped in ``/tmp`` as dictated by
+    ``nl.knaw.huc.di.sesame.resources.argos.Argos#putText``
+
 If you wish to dive straight into *using* authorization,
 `nl.knaw.huc.di.sesame.auth.DefaultAuthorizer
 <https://github.com/HuygensING/open-sesame/blob/master/src/main/java/nl/knaw/huc/di/sesame/auth/DefaultAuthorizer.java>`_
