@@ -23,7 +23,6 @@ import nl.knaw.huc.di.sesame.resources.Protected;
 import nl.knaw.huc.di.sesame.resources.argos.Argos;
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 
-import java.io.IOException;
 import java.util.List;
 
 public class SesameApplication extends Application<SesameConfiguration> {
@@ -76,7 +75,7 @@ public class SesameApplication extends Application<SesameConfiguration> {
     jersey.register(new AuthValueFactoryProvider.Binder<>(User.class));
   }
 
-  private void registerResources(SesameConfiguration configuration, JerseyEnvironment jersey) throws IOException {
+  private void registerResources(SesameConfiguration configuration, JerseyEnvironment jersey) {
     jersey.register(new Argos(objectMapper.getFactory(), "/proofreader"));
     jersey.register(createGoogleLoginResource(configuration.getGoogleConfig()));
     jersey.register(Protected.class);
