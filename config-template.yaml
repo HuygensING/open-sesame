@@ -24,3 +24,6 @@ logging:
   loggers:
     nl.knaw.huc.di.sesame: DEBUG
     nl.knaw.huc.di.sesame.resources: TRACE
+
+server:
+  rootPath: /api/
